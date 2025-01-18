@@ -38,11 +38,11 @@ class subset_view<R>::iterator {
  public:
   using iterator_category = std::forward_iterator_tag;
   using value_type = std::vector<ranges::range_value_t<R>>;
-  // using difference_type = std::ptrdiff_t; ??
+  using difference_type = std::ptrdiff_t; // ??
 
   iterator(subset_view<R> &parent)
     : parent_(&parent.data_),
-    index_(0),
+    index_(1),
     limit_(1U << parent.distance_) { }
 
   value_type operator*() const {
@@ -50,8 +50,6 @@ class subset_view<R>::iterator {
     std::size_t pos = 0;
     for (std::size_t mask = index_; mask > 0; mask >>= 1, ++pos) {
       if (mask & 1) {
-        // std::cout << "index = " << index_ << std::endl;
-        // std::cout << "mask = " << mask << std::endl;
         subset.push_back((*parent_)[pos]);
       }
     }
@@ -83,6 +81,7 @@ auto subset_view<R>::end() {
   return subset_view<R>::sentinel{1U << distance_};
 }
 
+#ifdef OLD_STD
 struct subset_closure {
   template <ranges::range R>
   auto operator()(R&& r) const {
@@ -106,14 +105,27 @@ auto operator|(R&& r, const subset_closure& c) {
   return c(std::forward<R>(r));
 }
 
+#else
+
+struct subset_adaptor : public ranges::range_adaptor_closure<subset_adaptor> {
+  template <ranges::viewable_range R>
+  auto operator()(R&& r) const {
+    return subset_view(std::forward<R>(r));
+  }
+};
+#endif
+
 inline constexpr subset_adaptor subset;
 
 int main() {
   auto vec = std::vector{1, 2, 3};
 
-  // auto w = subset_view(vec);
-
+#ifdef OLD_STD
   auto w = vec | views::all | subset();
+#else
+  auto w = vec | views::all | subset;
+#endif
+
 
   for (const auto &subset : w) {
     std::cout << "{";
