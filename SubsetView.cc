@@ -4,6 +4,7 @@
 #include <ranges>
 #include <vector>
 #include <bitset>
+#include <fstream>
 
 namespace ranges = std::ranges;
 namespace views = ranges::views;
@@ -117,8 +118,39 @@ struct subset_adaptor : public ranges::range_adaptor_closure<subset_adaptor> {
 
 inline constexpr subset_adaptor subset;
 
-int main() {
-  auto vec = std::vector{1, 2, 3};
+void ConsoleUse();
+bool Test(const std::string& input_path, const std::string& answer_path);
+
+int main(int argc, char** argv) {
+  if (argc == 1) {
+    ConsoleUse();
+    return 0;
+  }
+  if (argc == 3) {
+    std::string input = std::string(argv[1]);
+    std::string ans = std::string(argv[2]);
+    if (Test(input, ans)) {
+      std::cout << "Test passed for: " << input << "\n";
+      return 0;
+    }
+    std::cerr << "Test failed for: " << input << "\n";
+    return 1;
+  }
+
+  std::cerr << "Invalid arguments" << std::endl;
+  return 2;
+}
+
+void ConsoleUse() {
+  unsigned size;
+  unsigned tmp;
+  std::vector<unsigned> vec;
+
+  std::cin >> size;
+  for (std::size_t i = 0; i < size; ++i) {
+    std::cin >> tmp;
+    vec.push_back(tmp);
+  }
 
 #ifdef OLD_STD
   auto w = vec | views::all | subset();
@@ -126,15 +158,50 @@ int main() {
   auto w = vec | views::all | subset;
 #endif
 
-
-  for (const auto &subset : w) {
+  for (const auto &v : w) {
     std::cout << "{";
-    for (std::size_t i = 0; i < subset.size(); ++i) {
-      std::cout << subset[i];
-      if (i + 1 < subset.size()) std::cout << ", ";
+    for (std::size_t i = 0; i < v.size(); ++i) {
+      std::cout << v[i];
+      if (i + 1 < v.size()) std::cout << ", ";
     }
     std::cout << "} ";
   }
   std::cout << std::endl;
-  return 0;
+}
+
+bool Test(const std::string& input_path, const std::string& answer_path) {
+  std::ifstream in(input_path);
+  std::ifstream ans(answer_path);
+  
+  if (!in.is_open()) {
+    std::cerr << "Error: Could not open input file: " << input_path << "\n";
+    return false;
+  }
+  if (!ans.is_open()) {
+    std::cerr << "Error: Could not open answer file: " << answer_path << "\n";
+    return false;
+  }
+
+  std::vector<int> vec;
+  int value;
+  while (in >> value) {
+    vec.push_back(value);
+  }
+
+#ifdef OLD_STD
+  auto w = vec | views::all | subset();
+#else
+  auto w = vec | views::all | subset;
+#endif
+
+  unsigned tmp;
+  for (const auto& v : w) {
+    for (std::size_t i = 0; i < v.size(); ++i) {
+      ans >> tmp;
+      std::cout << tmp << " " << v[i] << std::endl;
+      // if (v[i] != tmp)
+        // return false;
+    }
+  }
+  return true;
 }
