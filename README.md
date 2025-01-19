@@ -30,3 +30,13 @@ Example of getting subsets of a custom set use:
 ./build/subset 3
 1 2 3
 ```
+
+### Old standart buildng
+
+This subset_view requires C++20 std or C++23 std, but it uses different interfaces.
+
+For building with C++20 without errors use:
+
+```shell
+cmake -DOLD_STD ..
+```
