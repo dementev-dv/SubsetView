@@ -5,6 +5,7 @@
 #include <vector>
 #include <bitset>
 #include <fstream>
+#include <cassert>
 
 namespace ranges = std::ranges;
 namespace views = ranges::views;
@@ -118,35 +119,46 @@ struct subset_adaptor : public ranges::range_adaptor_closure<subset_adaptor> {
 
 inline constexpr subset_adaptor subset;
 
-void ConsoleUse();
-bool Test(const std::string& input_path, const std::string& answer_path);
+void ConsoleUse(unsigned);
+bool Test(const std::string&, const std::string&);
+void TestTransform();
 
 int main(int argc, char** argv) {
   if (argc == 1) {
-    ConsoleUse();
+    TestTransform();
+      // ToDo unit tests.
     return 0;
   }
   if (argc == 3) {
     std::string input = std::string(argv[1]);
     std::string ans = std::string(argv[2]);
     if (Test(input, ans)) {
-      std::cout << "Test passed for: " << input << "\n";
+      std::cout << "Test passed for: " << input << std::endl;
       return 0;
     }
-    std::cerr << "Test failed for: " << input << "\n";
+    std::cerr << "Test failed for: " << input << std::endl;
     return 1;
   }
+  if (argc == 2) {
+    unsigned size;
+    try {
+      size = std::stoul(argv[1]);
+    } catch (const std::invalid_argument& e) {
+      std::cerr << "Invalid argument." << std::endl;
+      return 1;
+    }
+    ConsoleUse(size);
+    return 0;
+  }
 
-  std::cerr << "Invalid arguments" << std::endl;
+  std::cerr << "Invalid arguments." << std::endl;
   return 2;
 }
 
-void ConsoleUse() {
-  unsigned size;
+void ConsoleUse(unsigned size) {
   unsigned tmp;
   std::vector<unsigned> vec;
 
-  std::cin >> size;
   for (std::size_t i = 0; i < size; ++i) {
     std::cin >> tmp;
     vec.push_back(tmp);
@@ -174,11 +186,11 @@ bool Test(const std::string& input_path, const std::string& answer_path) {
   std::ifstream ans(answer_path);
   
   if (!in.is_open()) {
-    std::cerr << "Error: Could not open input file: " << input_path << "\n";
+    std::cerr << "Error: Could not open input file: " << input_path << std::endl;
     return false;
   }
   if (!ans.is_open()) {
-    std::cerr << "Error: Could not open answer file: " << answer_path << "\n";
+    std::cerr << "Error: Could not open answer file: " << answer_path << std::endl;
     return false;
   }
 
@@ -203,4 +215,20 @@ bool Test(const std::string& input_path, const std::string& answer_path) {
     }
   }
   return true;
+}
+
+void TestTransform() {
+  std::vector<unsigned> vec = {1, 2, 3, 4};
+
+#ifdef OLD_STD
+  auto w = vec | std::views::transform([](unsigned x) { return x * 2; }) | subset();
+#else
+  auto w = vec | std::views::transform([](unsigned x) { return x * 2; }) | subset;
+#endif
+
+  auto iter = w.begin();
+  assert((*iter) == std::vector<unsigned>{2});
+  ++iter;
+  assert((*iter) == std::vector<unsigned>{4});
+  std::cout << "TestTransform passed." << std::endl;
 }
