@@ -198,9 +198,8 @@ bool Test(const std::string& input_path, const std::string& answer_path) {
   for (const auto& v : w) {
     for (std::size_t i = 0; i < v.size(); ++i) {
       ans >> tmp;
-      std::cout << tmp << " " << v[i] << std::endl;
-      // if (v[i] != tmp)
-        // return false;
+      if (v[i] != tmp)
+        return false;
     }
   }
   return true;
