@@ -55,7 +55,7 @@ class subset_view<R>::iterator {
         subset.push_back((*parent_)[pos]);
       }
     }
-  return subset;
+    return subset;
   }
 
   iterator &operator++() {
@@ -65,7 +65,7 @@ class subset_view<R>::iterator {
 
   iterator operator++(int) {
     auto tmp = *this;
-    ++*this;
+    ++index_;
     return tmp;
   }
 
